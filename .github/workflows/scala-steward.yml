@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-22.04
     name: Scala Steward
     steps:
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install --frozen-lockfile --no-save
       - name: Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         with:
