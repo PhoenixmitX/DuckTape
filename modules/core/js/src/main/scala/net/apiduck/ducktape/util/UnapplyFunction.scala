@@ -7,13 +7,12 @@ object unapply:
   type WithUnapplyFunction[T] = (T, UnapplyFunction)
 
   extension [T](t: T)
-    inline def withUnapplyFunction(unapply: UnapplyFunction): WithUnapplyFunction[T] = (t, unapply)
+    inline def withUnapplyFunction(unapply: () => Unit): WithUnapplyFunction[T] = (t, unapply)
     inline def withoutUnapplyFunction: WithUnapplyFunction[T] = (t, ())
 
   extension (uf: UnapplyFunction)
     inline def apply(): Unit =
       uf.map(_())
-
 
   extension [T](wuf: Seq[WithUnapplyFunction[T]])
     def foreachAndGetUnapplyFunction(forEach: T => Unit): UnapplyFunction =

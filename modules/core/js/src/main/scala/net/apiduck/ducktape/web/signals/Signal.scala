@@ -45,7 +45,7 @@ object Signal:
 
     // aliases
 
-    def :=> [R](func: T => R): Signal.Computed[R] =
+    inline def :=> [R](func: T => R): Signal.Computed[R] =
       map(func)
 
   extension [T](signal: Signal.State[T])

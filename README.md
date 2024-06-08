@@ -1,3 +1,5 @@
-# Scala.js with sbt, Vite, FlameJS and Scala 3
+# DuckTape
 
-This is a simple example of a Scala.js project using sbt, Vite, FlameJS and Scala 3.
+## What is DuckTape?
+
+DuckTape is a Scala 3 library for building web applications.

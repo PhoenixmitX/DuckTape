@@ -22,15 +22,20 @@ trait SignalRenderer:
   implicit def nativeSignalToDt[T <: NativeType](signal: Signal[T]): DT.SignalText =
     DT.SignalText(si"$signal")
 
+  type KeyType = String | Int | Double
   extension [T](signal: State[Seq[T]])
 
-    def :=>> (renderFunc: ListEntrySignal[T] => DT.DTX)(using keyFunc: T => String): DT.DTX = // TODO rewrite using Renderable.withUnapplyFunction
+    def keyFn (keyFunc: T => KeyType): ListStateSignalRenderer[T] =
+      ListStateSignalRenderer[T](signal, keyFunc)
+
+  case class ListStateSignalRenderer [T](signal: State[Seq[T]], keyFunc: T => KeyType):
+    def :=>> (renderFunc: ListEntrySignal[T] => DT.DTX): DT.DTX =
       DT.withUnapplyFunction[HTMLElement]: () =>
         val fragment = document.createElement("f").asInstanceOf[HTMLElement] // TODO custom component with "display: contents"
-        val map = mutable.Map.empty[String, (State[T], DT.DTX, (Node, UnapplyFunction))]
-        var keyIndexes: Seq[String] = Nil
+        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Node, UnapplyFunction))]
+        var keyIndexes: Seq[KeyType] = Nil
 
-        def getCurrentIndex(key: String): Int =
+        def getCurrentIndex(key: KeyType): Int =
           keyIndexes.indexOf(key)
 
         def update(seq: Seq[T]): Unit =
@@ -64,21 +69,23 @@ trait SignalRenderer:
         val unsubscribe = signal.subscribe:
           update(_) // TODO can this be resolved with an effect?
 
-        (
-          fragment,
+        fragment.withUnapplyFunction:
           () =>
             unsubscribe()
             map.foreach:
               case (_, (_, _, (_, unapply))) =>
                 unapply()
-        )
 
   extension [T](signal: Signal[IterableOnce[T]])
 
-    def :=>> (renderFunc: Computed[T] => DT.DTX)(using keyFunc: T => String): DT.DTX =
+    def keyFn (keyFunc: T => KeyType)(renderFunc: Computed[T] => DT.DTX): ListSignalRenderer[T] =
+      ListSignalRenderer[T](signal, keyFunc)
+
+  case class ListSignalRenderer[T](signal: Signal[IterableOnce[T]], keyFunc: T => KeyType):
+    def :=>> (renderFunc: Computed[T] => DT.DTX): DT.DTX =
       DT.withUnapplyFunction[HTMLElement]: () =>
         val fragment = document.createElement("f").asInstanceOf[HTMLElement] // TODO custom component with "display: contents"
-        val map = mutable.Map.empty[String, (State[T], DT.DTX, (Node, UnapplyFunction))]
+        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Node, UnapplyFunction))]
 
         // add & update
         def update(iterable: IterableOnce[T]): Unit =
@@ -112,11 +119,9 @@ trait SignalRenderer:
         val unsubscribe = signal.subscribe:
           update(_) // TODO can this be resolved with an effect?
 
-        (
-          fragment,
+        fragment.withUnapplyFunction:
           () =>
             unsubscribe()
             map.foreach:
               case (_, (_, _, (_, unapply))) =>
                 unapply()
-        )

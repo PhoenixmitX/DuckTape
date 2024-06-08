@@ -2,6 +2,7 @@ package net.apiduck.ducktape.demo
 
 import net.apiduck.ducktape.DT
 import net.apiduck.ducktape.DuckTape
+import net.apiduck.ducktape.compatibility.ElementType.DivElement
 import net.apiduck.ducktape.structure.Structure
 import net.apiduck.ducktape.structure.Structure.*
 import net.apiduck.ducktape.web.signals.Signal
@@ -11,9 +12,8 @@ import org.scalajs.dom.*
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.Random
-import net.apiduck.ducktape.compatibility.ElementType.DivElement
 
-object Main {
+object Main:
 
   @JSExportTopLevel("main")
   def main(args: Array[String]): Unit = {
@@ -58,10 +58,7 @@ object Main {
         br,
         si"Clicked: $totalNumbers times! Sum: $sum, Min: $min, Average: $average, Max: $max",
         ul(
-          {
-            given (Double => String) = _.toString
-            randomNumbers :=>> { c => Color(c) }
-          }
+          randomNumbers .keyFn (c => c) :=>> (Color)
         )
       )
     )
@@ -77,4 +74,3 @@ object Main {
       button(onClick := { _ => color.insertTop(js.Math.random()) })("Insert At Top"),
       button(onClick := { _ => color.insertBottom(js.Math.random()) })("Insert At Bottom"),
     )
-}
