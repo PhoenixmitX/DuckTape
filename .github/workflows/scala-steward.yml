@@ -1,7 +1,7 @@
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '23 2 * * *'
+  # schedule: # TODO reenable the schedule
+  #   - cron: '23 2 * * *'
 
 name: Scala Steward
 
@@ -10,8 +10,9 @@ jobs:
     runs-on: ubuntu-22.04
     name: Scala Steward
     steps:
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install --frozen-lockfile --no-save
+      # TODO scala-steward-action does not depend on the checkout action without it bun install is impossible
+      # even if we add the checkout action, the scala-steward-action will checkout the repository again
+      # and ignore the previous checkout action and the installed dependencies
       - name: Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         with:
