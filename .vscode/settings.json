@@ -1,0 +1,15 @@
+{
+    "files.watcherExclude": {
+        "**/node_modules": true,
+        "**/target": true
+    },
+    "metals.inlayHints.implicitConversions.enable": false,
+    "cSpell.words": [
+        "Renderable"
+    ],
+    "files.exclude": {
+        "**/js/target": false,
+        "**/jvm/target": false,
+        ".bloop": false,
+    },
+}
