@@ -15,7 +15,6 @@ lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "ducktape-core",
     autoCompilerPlugins := true,
-    mainClass := Some("net.apiduck.ducktape.structure.Test"),
   )
   .jsConfigure(
     _.enablePlugins(ScalablyTypedConverterExternalNpmPlugin)

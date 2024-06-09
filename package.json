@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"sbt ~fastLinkJS\" \"vite --host\"",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "del": "bun run build",
     "preview": "vite preview"
   },
