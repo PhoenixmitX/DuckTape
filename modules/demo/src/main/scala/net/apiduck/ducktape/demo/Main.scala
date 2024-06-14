@@ -18,11 +18,11 @@ object Main:
   @JSExportTopLevel("main")
   def main(args: Array[String]): Unit = {
 
-    val personToGreet = Signal("world")
+    val personToGreet = Signal.State("world")
 
-    val color = Signal(0) // HSL color
+    val color = Signal.State(0) // HSL color
 
-    val randomNumbers = Signal[Seq[Double]](Seq[Double]())
+    val randomNumbers = Signal.State[Seq[Double]](Seq[Double]())
     val totalNumbers = randomNumbers.map(_.length)
     val sum = randomNumbers.map(_.sum)
     val average = sum.map(s => if totalNumbers.get() == 0 then 0 else s / totalNumbers.get())
@@ -57,8 +57,9 @@ object Main:
         button(onClick := { _ => randomNumbers modify { Random.shuffle(_) } })("Shuffle"),
         br,
         si"Clicked: $totalNumbers times! Sum: $sum, Min: $min, Average: $average, Max: $max",
-        ul(
-          randomNumbers .keyFn (c => c) :=>> (Color)
+        ul()(
+          ForEach(in = randomNumbers, keyFn = c => c):
+            Color
         )
       )
     )

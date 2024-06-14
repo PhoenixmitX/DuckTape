@@ -1,12 +1,11 @@
 package net.apiduck.ducktape.web.signals
 
-
-import net.apiduck.ducktape.web.signals.Signal.Computed
-import org.scalajs.dom.*
 import typings.signalPolyfill.distWrapperMod.Signal as Native
 import typings.signalPolyfill.distWrapperMod.Signal.subtle.Watcher
 
+import scala.concurrent.Future
 import scala.scalajs.js.JSConverters.*
+import net.apiduck.ducktape.util.unapply.*
 
 private[ducktape] object SignalWatcher:
 
@@ -15,7 +14,10 @@ private[ducktape] object SignalWatcher:
   private val w = new Watcher(_ => {
     if needsProcessing then
       needsProcessing = false
-      window.setTimeout(() => processPending(), 0)
+      // TODO this execution context is using the micro-task queue, not the macro-task queue, that can cause unexpected behavior
+      import scala.concurrent.ExecutionContext.Implicits.global
+      Future:
+        processPending()
   })
 
   private def processPending(): Unit =
@@ -26,12 +28,12 @@ private[ducktape] object SignalWatcher:
 
     w.watch()
 
-  def effect(callback: () => ((() => Unit) | Unit)): () => Unit =
-    var cleanup: (() => Unit) | Unit = ()
+  private[signals] def effect(callback: () => UnapplyFunction): () => Unit =
+    var unapply: UnapplyFunction = ()
 
     val computed: Native.Computed[Any] = Native.Computed(() => {
-      if cleanup.isInstanceOf[() => Unit] then cleanup.asInstanceOf[() => Unit]()
-      cleanup = callback()
+      unapply()
+      unapply = callback()
     }, Signal.options)
 
     w.watch(computed)
@@ -39,5 +41,5 @@ private[ducktape] object SignalWatcher:
 
     () => {
       w.unwatch(computed)
-      if cleanup != () then cleanup.asInstanceOf[() => Unit]()
+      unapply()
     }

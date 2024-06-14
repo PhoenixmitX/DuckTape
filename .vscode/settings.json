@@ -5,11 +5,12 @@
     },
     "metals.inlayHints.implicitConversions.enable": false,
     "cSpell.words": [
+        "ducktape",
         "Renderable"
     ],
     "files.exclude": {
-        "**/js/target": false,
-        "**/jvm/target": false,
-        ".bloop": false,
+        ".bloop": true,
+        ".bsp": true,
+        "node_modules": true,
     },
 }

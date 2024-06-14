@@ -5,13 +5,14 @@ import typings.signalPolyfill.distWrapperMod.Signal as Native
 import scala.language.implicitConversions
 import scala.scalajs.js
 import scala.concurrent.ExecutionContext
+import net.apiduck.ducktape.util.unapply.UnapplyFunction
 
-trait Signal[T]:
+trait Signal[+T]:
 
   def get(): T
   def map[R](func: T => R): Signal[R] = Signal.Computed(() => func(get()))
 
-  def subscribe(func: T => ((() => Unit) | Unit)): () => Unit =
+  def subscribe(func: T => UnapplyFunction): UnapplyFunction =
       SignalWatcher.effect(() => func(get()))
 
   inline def :=> [R](func: T => R): Signal[R] = map(func)
@@ -31,15 +32,15 @@ object Signal:
       ComputedWithSource(map(func), value => set(applyChange(value, get())))
     def := (value: T): Unit = set(value)
 
-  class State[T](private val signal: Native.State[T]) extends WithState[T]:
+  class State[T]private(private val signal: Native.State[T]) extends WithState[T]:
     def get(): T = signal.get()
     def set(value: T): Unit = signal.set(value)
 
   object State:
-    def apply[T](initialValue: T): Signal.State[T] =
+    def apply[T](initialValue: T): WithState[T] =
       new State(Native.State(initialValue, options))
 
-  class Computed[T](private val signal: Native.Computed[T]) extends Signal[T]:
+  class Computed[T]private(private val signal: Native.Computed[T]) extends Signal[T]:
     def get(): T = signal.get()
 
   object Computed:
@@ -50,8 +51,8 @@ object Signal:
     def get(): T = computed.get()
     def set(value: T): Unit = setter(value)
 
-  class ListEntrySignal[T]private[ducktape](val list: State[Seq[T]], signal: Signal[T], val getCurrentIndex: () => Int) extends WithState[T]:
-    def get(): T = signal.get()
+  class ListEntrySignal[T]private[ducktape](val list: WithState[Seq[T]], entrySignal: Signal[T], val getCurrentIndex: () => Int) extends WithState[T]:
+    def get(): T = entrySignal.get()
     def set(value: T): Unit = list := list.get().updated(getCurrentIndex(), value)
 
     def delete(): Unit = list := list.get().patch(getCurrentIndex(), Nil, 1)
