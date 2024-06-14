@@ -27,11 +27,11 @@ trait ConditionalSignalRenderer:
       nodes
     ) -> (() => previousUnapply())
 
+  // TODO Match may rerender every time
   def Match[E](value: Signal[E])(cases: PartialFunction[E, DT.DTX]): WithUnapplyFunction[Signal[Seq[Node]]] =
     var previousUnapply: UnapplyFunction = ()
-    value.map(value =>
+    value.map(value => cases.applyOrElse(value, _ => DT.Empty)).map(next =>
       previousUnapply()
-      val next = cases.applyOrElse(value, _ => DT.Empty)
       val (nodes, unapply) = next.render()
       previousUnapply = unapply
       nodes
