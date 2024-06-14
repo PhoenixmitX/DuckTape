@@ -8,13 +8,14 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "net.apiduck"
 ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all")
 
+val PekkoVersion = "1.0.2"
+
 lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
   .in(file("modules/core"))
   .settings(
     name := "ducktape-core",
-    autoCompilerPlugins := true,
   )
   .jsConfigure(
     _.enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
@@ -24,6 +25,27 @@ lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
 
     // Tell ScalablyTyped that we manage `bun install` ourselves
     externalNpm := baseDirectory.value / "../../../",
+  )
+
+lazy val messaging: CrossProject = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Full)
+  .withoutSuffixFor(JVMPlatform)
+  .in(file("modules/messaging"))
+  .dependsOn(core)
+  .settings(
+    name := "ducktape-messaging",
+    libraryDependencies ++= Seq(
+      "io.bullet" %%% "borer-core" % "1.14.0",
+      "io.bullet" %%% "borer-derivation" % "1.14.0",
+    ),
+  )
+
+lazy val pekkoMessaging: Project = project
+  .in(file("modules/pekko-messaging"))
+  .dependsOn(messaging.jvm)
+  .settings(
+    name := "ducktape-pekko-messaging",
+    libraryDependencies += "org.apache.pekko" %% "pekko-actor-typed" % PekkoVersion,
   )
 
 lazy val demo: Project = project
