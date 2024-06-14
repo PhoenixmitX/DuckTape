@@ -8,6 +8,7 @@ import types.AnyAttribute
 enum DT extends DT.DTX:
   case Tag[E <: Element](tag: String, needsClosingTag: Boolean)(val attributes: AnyAttribute[E]*)(val children: DT.DTX*)
   case Text(text: String)
+  case Empty
 
   def renderToHTMLString(): String =
     this match
@@ -20,6 +21,7 @@ enum DT extends DT.DTX:
           val attributes = dt.attributes.map(_.renderToHTMLString()).mkString(" ")
           s"<${dt.tag} $attributes>"
       case Text(text) => text // TODO escape text
+      case Empty => ""
 
 object DT:
   trait DTX:

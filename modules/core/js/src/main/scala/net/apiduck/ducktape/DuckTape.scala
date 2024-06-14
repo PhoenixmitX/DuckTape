@@ -15,10 +15,10 @@ object DuckTape {
 
   def render(renderable: DT.DTX, id: String = "root"): UnapplyFunction =
     val root = getOrCreateElement(id)
-    val (element, unapply) = renderable.render()
-    root.appendChild(element)
+    val (elements, unapply) = renderable.render()
+    elements.foreach(element => root.appendChild(element))
     () => {
       unapply()
-      root.removeChild(element)
+      elements.foreach(root.removeChild)
     }
 }

@@ -32,7 +32,7 @@ trait SignalRenderer:
     def :=>> (renderFunc: ListEntrySignal[T] => DT.DTX): DT.DTX =
       DT.withUnapplyFunction[HTMLElement]: () =>
         val fragment = document.createElement("f").asInstanceOf[HTMLElement] // TODO custom component with "display: contents"
-        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Node, UnapplyFunction))]
+        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Seq[Node], UnapplyFunction))]
         var keyIndexes: Seq[KeyType] = Nil
 
         def getCurrentIndex(key: KeyType): Int =
@@ -56,20 +56,20 @@ trait SignalRenderer:
           // remove
           map.keySet.diff(seq.map(keyFunc).toSet)
             .foreach: key =>
-              val (_, renderable, (element, unapply)) = map.remove(key).get
-              fragment.removeChild(element)
+              val (_, renderable, (elements, unapply)) = map.remove(key).get
+              elements.foreach(fragment.removeChild)
               unapply()
 
           // ordering
           keyIndexes.foreach: key =>
-            val (_, _, (element, _)) = map(key)
-            fragment.appendChild(element)
+            val (_, _, (elements, _)) = map(key)
+            elements.foreach(fragment.appendChild)
 
 
         val unsubscribe = signal.subscribe:
           update(_) // TODO can this be resolved with an effect?
 
-        fragment.withUnapplyFunction:
+        Seq(fragment).withUnapplyFunction:
           () =>
             unsubscribe()
             map.foreach:
@@ -85,7 +85,7 @@ trait SignalRenderer:
     def :=>> (renderFunc: Signal[T] => DT.DTX): DT.DTX =
       DT.withUnapplyFunction[HTMLElement]: () =>
         val fragment = document.createElement("f").asInstanceOf[HTMLElement] // TODO custom component with "display: contents"
-        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Node, UnapplyFunction))]
+        val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Seq[Node], UnapplyFunction))]
 
         // add & update
         def update(iterable: IterableOnce[T]): Unit =
@@ -106,20 +106,20 @@ trait SignalRenderer:
           // remove
           map.keySet.diff(seq.map(keyFunc).toSet)
             .foreach: key =>
-              val (_, renderable, (element, unapply)) = map.remove(key).get
-              fragment.removeChild(element)
+              val (_, renderable, (elements, unapply)) = map.remove(key).get
+              elements.foreach(fragment.removeChild)
               unapply()
 
           // ordering
           orderedKeys.foreach: key =>
-            val (_, _, (element, _)) = map(key)
-            fragment.appendChild(element)
+            val (_, _, (elements, _)) = map(key)
+            elements.foreach(fragment.appendChild)
 
 
         val unsubscribe = signal.subscribe:
           update(_) // TODO can this be resolved with an effect?
 
-        fragment.withUnapplyFunction:
+        Seq(fragment).withUnapplyFunction:
           () =>
             unsubscribe()
             map.foreach:
