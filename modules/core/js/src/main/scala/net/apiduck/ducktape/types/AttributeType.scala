@@ -5,7 +5,7 @@ import net.apiduck.ducktape.compatibility.ElementType
 import scala.Boolean as SBoolean
 import scala.Predef.String as SString
 import net.apiduck.ducktape.compatibility.EventType
-import net.apiduck.ducktape.web.signals.Signal.Signal
+import net.apiduck.ducktape.web.signals.Signal
 
 trait AnyAttributeType[-E <: ElementType.Element]
 

@@ -4,14 +4,14 @@ import net.apiduck.ducktape.DT
 import net.apiduck.ducktape.DT.*
 import net.apiduck.ducktape.web.signals.Signal
 import net.apiduck.ducktape.web.signals.Signal.*
-import net.apiduck.ducktape.web.signals.Signal.ListEntrySignal
-import net.apiduck.ducktape.web.signals.Signal.State
 import org.scalajs.dom.*
 
 import scala.collection.mutable
 import scala.language.implicitConversions
 import net.apiduck.ducktape.util.unapply.*
 
+// TODO extract the logic to spit Signal[Seq[T]] and Signal[IterableOnce[T]] into separate files
+// TODO the rendering should be done in a new file ConditionalSignalRenderer with all the functions from the ConditionalRenderer
 trait SignalRenderer:
 
   implicit def textSignalToDt(signal: Signal[String]): DT.SignalText =
@@ -46,7 +46,7 @@ trait SignalRenderer:
           keyValueMap.foreach: (key, value) =>
             map.updateWith(key):
               case None =>
-                val newSignal = Signal(value)
+                val newSignal = Signal.State(value)
                 val renderable = renderFunc(ListEntrySignal(signal, newSignal, () => getCurrentIndex(key)))
                 Some((newSignal, renderable, renderable.render()))
               case prev@Some((signal, _, _)) =>
@@ -78,11 +78,11 @@ trait SignalRenderer:
 
   extension [T](signal: Signal[IterableOnce[T]])
 
-    def keyFn (keyFunc: T => KeyType)(renderFunc: Computed[T] => DT.DTX): ListSignalRenderer[T] =
+    def keyFn (keyFunc: T => KeyType)(renderFunc: Signal[T] => DT.DTX): ListSignalRenderer[T] =
       ListSignalRenderer[T](signal, keyFunc)
 
   case class ListSignalRenderer[T](signal: Signal[IterableOnce[T]], keyFunc: T => KeyType):
-    def :=>> (renderFunc: Computed[T] => DT.DTX): DT.DTX =
+    def :=>> (renderFunc: Signal[T] => DT.DTX): DT.DTX =
       DT.withUnapplyFunction[HTMLElement]: () =>
         val fragment = document.createElement("f").asInstanceOf[HTMLElement] // TODO custom component with "display: contents"
         val map = mutable.Map.empty[KeyType, (State[T], DT.DTX, (Node, UnapplyFunction))]
@@ -96,8 +96,8 @@ trait SignalRenderer:
           keyValueMap.foreach: (key, value) =>
             map.updateWith(key):
               case None =>
-                val newSignal = Signal(value)
-                val renderable = renderFunc(newSignal.map(c => c))
+                val newSignal = State(value)
+                val renderable = renderFunc(newSignal.map(v => v))
                 Some((newSignal, renderable, renderable.render()))
               case prev@Some((signal, _, _)) =>
                 signal := value
