@@ -1,20 +1,20 @@
 package net.apiduck.ducktape.util
 
 import scala.scalajs.js.UndefOr
+import scala.language.implicitConversions
 
 object unapply:
   type UnapplyFunction = UndefOr[() => Unit]
-  type WithUnapplyFunction[T] = (T, UnapplyFunction)
-
-  extension [T](t: T)
-    inline def withUnapplyFunction(unapply: () => Unit): WithUnapplyFunction[T] = (t, unapply)
-    inline def withoutUnapplyFunction: WithUnapplyFunction[T] = (t, ())
 
   extension (uf: UnapplyFunction)
     inline def apply(): Unit =
       uf.map(_())
 
-  extension [T](wuf: Seq[WithUnapplyFunction[T]])
-    def foreachAndGetUnapplyFunction(forEach: T => Unit): UnapplyFunction =
-      val allUnapplyFunctions = wuf.map { case (t, unapply) => forEach(t); unapply }
-      () => allUnapplyFunctions.foreach(_())
+  case class WithUnapplyFunction[+T](value: T, unapply: UnapplyFunction = ()):
+    def map[R](f: T => R): WithUnapplyFunction[R] = WithUnapplyFunction(f(value), unapply)
+    def flatMap[R](f: T => WithUnapplyFunction[R]): WithUnapplyFunction[R] =
+      val WithUnapplyFunction(r, nextUnapply) = f(value)
+      WithUnapplyFunction(r, () => { unapply(); nextUnapply() })
+
+    def hasUnapply: Boolean = unapply.isDefined
+

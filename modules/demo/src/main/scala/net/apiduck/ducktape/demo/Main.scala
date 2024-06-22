@@ -58,7 +58,7 @@ object Main:
         br,
         si"Clicked: $totalNumbers times! Sum: $sum, Min: $min, Average: $average, Max: $max",
         ul()(
-          ForEach(in = randomNumbers, keyFn = c => c):
+          SForEach(in = randomNumbers, keyFn = c => c):
             Color
         )
       )

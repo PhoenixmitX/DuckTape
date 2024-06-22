@@ -6,6 +6,10 @@ import scala.language.implicitConversions
 import scala.scalajs.js
 import scala.concurrent.ExecutionContext
 import net.apiduck.ducktape.util.unapply.UnapplyFunction
+import scala.concurrent.Future
+import scala.collection.mutable
+import net.apiduck.ducktape.util.unapply.WithUnapplyFunction
+import scala.reflect.ClassTag
 
 trait Signal[+T]:
 
@@ -18,6 +22,8 @@ trait Signal[+T]:
   inline def :=> [R](func: T => R): Signal[R] = map(func)
 
 object Signal:
+
+  type MaybeSignal[T] = T | Signal[T]
 
   private val scalaOptions = js.Dynamic.literal(
     equals = (a: js.Any, b: js.Any) => a == b
@@ -63,6 +69,23 @@ object Signal:
     def insertTop(value: T): Unit = list := value +: list.get()
     def insertBottom(value: T): Unit = list := list.get() :+ value
 
+  enum SignalLike[+T]:
+    case Constant(value: T)
+    case WithSignal(signal: Signal[T])
+
+    def get(): T = this match
+      case Constant(value) => value
+      case WithSignal(signal) => signal.get()
+
+    def toMaybeSignal: MaybeSignal[T] = this match
+      case Constant(value) => value
+      case WithSignal(signal) => signal
+
+  object SignalLike:
+    def apply[T](value: MaybeSignal[T])(using ClassTag[T]): SignalLike[T] = value match
+      case t: T => Constant(t)
+      case s: Signal[T] @unchecked => WithSignal(s)
+
   private def mapArgs(args: Seq[Any]): Seq[Any] = args.map:
     case s: Signal[_] => s.get()
     case x => x
@@ -98,7 +121,7 @@ object Signal:
       promise.`then`(value => signal := value)
       signal
 
-  extension [T](future: scala.concurrent.Future[T]) // TODO handle errors
+  extension [T](future: Future[T]) // TODO handle errors
 
     def toSignal(using ExecutionContext): Signal[Option[T]] =
       val signal = State[Option[T]](None)
@@ -109,3 +132,53 @@ object Signal:
       val signal = State[T](optimisticValue)
       future.foreach(value => signal := value)
       signal
+
+  private def defaultReduce[T]: (Seq[T] => Seq[T]) | Null = null
+  extension [T](signal: WithState[Seq[T]])
+
+    def mapEntries[Key, Created, PostCreate, Return](
+      keyFn: T => Key,
+      create: (Key, ListEntrySignal[T]) => Created,
+      destroy: (Key, Created) => Unit = (_: Key, _: Created) => (),
+      postCreate: Created => PostCreate = (c: Created) => c,
+      reduce: (Seq[PostCreate] => Return) | Null = defaultReduce[PostCreate]
+    ): WithUnapplyFunction[Signal[Return]] =
+      val map: mutable.Map[Key, (WithState[T], Created, PostCreate)] = mutable.Map.empty
+      var keyIndexes: Seq[Key] = Nil
+
+      def getCurrentIndex(key: Key): Int =
+      keyIndexes.indexOf(key)
+
+      val mapped = signal.map: (seq: Seq[T]) =>
+
+        val keyValueMap = seq.map(value => keyFn(value) -> value)
+        keyIndexes = keyValueMap.map(_._1)
+
+        // add & update
+        keyValueMap.foreach: (key, value) =>
+          map.updateWith(key):
+            case None =>
+              val newSignal = State(value)
+              val crated = create(key, ListEntrySignal(signal, newSignal, () => getCurrentIndex(key)))
+              val result = postCreate(crated)
+              Some((newSignal, crated, result))
+            case prev@Some((signal, _, _)) =>
+              signal := value
+              prev
+
+        // remove
+        map.keySet.diff(seq.map(keyFn).toSet)
+          .foreach: key =>
+            val (_, created, _) = map.remove(key).get
+            destroy(key, created)
+
+        // to ordered seq
+        keyIndexes.map(key => map(key)._3)
+
+      WithUnapplyFunction(
+        if reduce == null then mapped.asInstanceOf[Signal[Return]] else mapped.map(reduce),
+        () =>
+          map.foreach:
+            case (key, (signal, created, _)) =>
+              destroy(key, created)
+      )

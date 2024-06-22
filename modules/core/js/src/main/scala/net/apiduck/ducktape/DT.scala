@@ -1,44 +1,41 @@
 package net.apiduck.ducktape
 
 import net.apiduck.ducktape.compatibility.ElementType
-
-import org.scalajs.dom.*
-import net.apiduck.ducktape.web.signals.Signal
+import net.apiduck.ducktape.types.AnyAttribute
 import net.apiduck.ducktape.util.unapply.*
+import net.apiduck.ducktape.web.signals.Signal
+import org.scalajs.dom.*
 
 import scala.language.implicitConversions
-import net.apiduck.ducktape.types.AnyAttribute
+import net.apiduck.ducktape.web.signals.Signal.MaybeSignal
+import net.apiduck.ducktape.web.signals.Signal.SignalLike
+import scala.reflect.ClassTag
 
 enum DT extends DT.DTX:
   import DT.*
-  case Tag[E <: ElementType.Element](tag: String, needsClosingTag: Boolean = false)(val attributes: AnyAttribute[E]*)(val children: DT.TagChildren*)
+  case Tag[E <: ElementType.Element](tag: String, needsClosingTag: Boolean = false)(val attributes: AnyAttribute[E]*)(val children: DT.Children*)
   case Text(text: String)
   case SignalText(signal: Signal[String])
   case Empty
   case Fragment(children: DT.DTX*)
 
-  override def render(): WithUnapplyFunction[Seq[Node]] =
+  override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
     this match
       case dt: Tag[?] =>
-        val dtxElements = dt.children.map:
-          case child: DT.DTX =>
-            val (nodes, unapply) = child.render()
-            DTXElements.CachedElement(nodes, unapply)
-          case (child: Signal[Seq[Node]], unapply) =>
-            DTXElements.SignalElement(child, unapply)
+        val mappedChildren = dt.children.map(_.render())
 
-        val nodes = Signal.Computed(() => dtxElements.flatMap(_.getCurrent()))
+        val nodes = Signal.Computed(() => mappedChildren.flatMap(c => SignalLike(c.value).get()))
 
         val element = document.createElement(dt.tag).asInstanceOf[ElementType.Element]
         val unapplyAttributes: Seq[UnapplyFunction] = dt.attributes.map(_.applyTo(element))
 
         val unapplyNodes = nodes.subscribe: nodes =>
-          element.innerHTML = "" // TODO can this be optimized?
+          element.innerHTML = ""
           nodes.foreach(element.appendChild)
 
-        val unapplyChildren = () => dtxElements.foreach(_.unapply())
+        val unapplyChildren = () => mappedChildren.foreach(_.unapply())
 
-        (
+        WithUnapplyFunction(
           Seq(element),
           () =>
             unapplyAttributes.foreach(_())
@@ -46,48 +43,34 @@ enum DT extends DT.DTX:
             unapplyChildren()
         )
       case Text(text) =>
-        (Seq(document.createTextNode(text)), ())
+        WithUnapplyFunction(Seq(document.createTextNode(text)))
       case SignalText(signal) =>
         val element = document.createTextNode("")
         val unsubscribe = signal.subscribe(v => element.textContent = v)
-        (Seq(element), unsubscribe)
+        WithUnapplyFunction(Seq(element), unsubscribe)
       case Empty =>
-        (Nil, ())
+        WithUnapplyFunction(Nil)
       case Fragment(children*) =>
         val mappedChildren = children.map(_.render())
-        val elements = mappedChildren.flatMap(_._1)
+        val nodes = Signal.Computed(() => mappedChildren.flatMap(c => SignalLike(c.value).get()))
         val unapplyFunctions = mappedChildren.map(_._2)
-        (
-          elements,
+        WithUnapplyFunction(
+          nodes,
           () => unapplyFunctions.foreach(_())
         )
 
 object DT:
 
-  type TagChildren = DT.DTX | WithUnapplyFunction[Signal[Seq[Node]]]
+  type Children = DT.DTX
 
   trait DTX:
-    def render(): WithUnapplyFunction[Seq[Node]]
+    def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]]
 
   def apply[RenderType <: Node](createFunc: () => RenderType): DT.DTX =
     new DT.DTX:
-      override def render(): WithUnapplyFunction[Seq[RenderType]] = (Seq(createFunc()), ())
+      override def render(): WithUnapplyFunction[Seq[RenderType]] = WithUnapplyFunction(Seq(createFunc()), ())
 
   def withUnapplyFunction[RenderType <: Node](renderFunc: () => WithUnapplyFunction[Seq[RenderType]]): DT.DTX =
     new DT.DTX:
       override def render(): WithUnapplyFunction[Seq[RenderType]] =
         renderFunc()
-
-
-  private enum DTXElements:
-    case CachedElement(element: Seq[Node], unapplyFunction: UnapplyFunction)
-    case SignalElement(signal: Signal[Seq[Node]], unapplyFunction: UnapplyFunction)
-
-    def getCurrent(): Seq[Node] = this match
-      case CachedElement(element, _) => element
-      case SignalElement(signal, _) => signal.get()
-
-    def unapply(): UnapplyFunction = this match
-      case CachedElement(_, unapplyFunction) => unapplyFunction
-      case SignalElement(_, unapplyFunction) => unapplyFunction()
-

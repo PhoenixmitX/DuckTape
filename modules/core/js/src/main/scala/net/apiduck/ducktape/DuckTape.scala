@@ -3,6 +3,8 @@ package net.apiduck.ducktape
 import org.scalajs.dom.*
 import net.apiduck.ducktape.DT.*
 import net.apiduck.ducktape.util.unapply.*
+import net.apiduck.ducktape.web.signals.Signal
+import net.apiduck.ducktape.web.signals.Signal.SignalLike
 
 object DuckTape {
 
@@ -15,10 +17,21 @@ object DuckTape {
 
   def render(renderable: DT.DTX, id: String = "root"): UnapplyFunction =
     val root = getOrCreateElement(id)
-    val (elements, unapply) = renderable.render()
-    elements.foreach(element => root.appendChild(element))
-    () => {
-      unapply()
-      elements.foreach(root.removeChild)
-    }
+    val WithUnapplyFunction(elements, unapply) = renderable.render()
+    SignalLike(elements) match
+      case SignalLike.WithSignal(signal) =>
+        val unapplySignal = signal.subscribe: nodes =>
+          root.innerHTML = ""
+          nodes.foreach(root.appendChild)
+        () => {
+          unapply()
+          unapplySignal()
+          root.innerHTML = ""
+        }
+      case SignalLike.Constant(nodes) =>
+        nodes.foreach(element => root.appendChild(element))
+        () => {
+          unapply()
+          root.innerHTML = ""
+        }
 }

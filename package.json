@@ -12,10 +12,10 @@
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "concurrently": "^8.2.2",
-    "vite": "^5.2.13"
+    "typescript": "5.4.5",
+    "vite": "^5.3.1"
   },
   "dependencies": {
-    "signal-polyfill": "^0.1.1",
-    "typescript": "^5.4.5"
+    "signal-polyfill": "^0.1.1"
   }
 }
