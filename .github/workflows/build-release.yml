@@ -19,7 +19,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: install dependencies using bun
-        run: bun ci
+        run: bun i --frozen-lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4
