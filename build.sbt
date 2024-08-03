@@ -4,7 +4,8 @@ import sbt.ProjectOrigin.Organic
 import sbtcrossproject.CrossProject
 
 ThisBuild / scalaVersion := "3.4.2"
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.0.1"
+ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / organization := "net.apiduck"
 ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all", "-Yexplicit-nulls") // TODO add in scala 3.5.0 -Yflexible-types
 
@@ -23,6 +24,7 @@ lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
     _.enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
   )
   .jsSettings(
+    stUseScalaJsDom := true,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % ScalaJsDomVersion,
 
     // Tell ScalablyTyped that we manage `bun install` ourselves
@@ -41,6 +43,7 @@ lazy val messaging: CrossProject = crossProject(JSPlatform, JVMPlatform)
       "io.bullet" %%% "borer-core" % BorerVersion,
       "io.bullet" %%% "borer-derivation" % BorerVersion,
     ),
+    publish / skip := true, // not ready for publishing
   )
 
 lazy val pekkoMessaging: Project = project
@@ -49,6 +52,7 @@ lazy val pekkoMessaging: Project = project
   .settings(
     name := "ducktape-pekko-messaging",
     libraryDependencies += "org.apache.pekko" %% "pekko-actor-typed" % PekkoVersion,
+    publish / skip := true, // not ready for publishing
   )
 
 lazy val demo: Project = project
@@ -58,6 +62,7 @@ lazy val demo: Project = project
   .settings(
     name := "ducktape-demo",
     scalaJSUseMainModuleInitializer := true,
+    publish / skip := true,
 
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
@@ -72,3 +77,8 @@ lazy val demo: Project = project
       // .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("net.apiduck")))
     },
   )
+
+// Publishing
+publish / skip := true
+ThisBuild / publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/phoenixmitx/ducktape")
+ThisBuild / credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "phoenixmitx", sys.env.get("GITHUB_TOKEN").getOrElse(throw new Exception("GITHUB_TOKEN is not set")))

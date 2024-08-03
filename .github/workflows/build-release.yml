@@ -1,0 +1,36 @@
+name: Build & Release
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish a new release'
+        required: true
+        default: false
+        type: boolean
+  push:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: install dependencies using bun
+        run: bun ci
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+
+      - name: Build
+        run: sbt +compile
+
+      - name: Publish
+        run: sbt +publish
+        if: ${{ github.event.inputs.publish }}

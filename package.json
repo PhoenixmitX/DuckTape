@@ -1,5 +1,5 @@
 {
-  "name": "test-vite",
+  "name": "duck-tape",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,9 +13,9 @@
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "concurrently": "^8.2.2",
     "typescript": "5.4.5",
-    "vite": "^5.3.1"
+    "vite": "^5.3.5"
   },
   "dependencies": {
-    "signal-polyfill": "^0.1.1"
+    "signal-polyfill": "^0.1.2"
   }
 }
