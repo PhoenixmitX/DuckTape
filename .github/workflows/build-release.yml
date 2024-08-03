@@ -34,3 +34,5 @@ jobs:
       - name: Publish
         run: sbt +publish
         if: ${{ github.event.inputs.publish }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
