@@ -1,0 +1,10 @@
+{
+	"id": "aiduck-post-install",
+	"version": "1.0.0",
+	"name": "AiDuck post instal",
+	"description": "Post installation script for AiDuck",
+	"installsAfter": [
+		"ghcr.io/devcontainers/features/docker-outside-of-docker",
+		"ghcr.io/devcontainers-contrib/features/apt-get-packages"
+	]
+}

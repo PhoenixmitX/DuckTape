@@ -1,0 +1,80 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+{
+	"name": "DuckTape",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"dockerDashComposeVersion": "none",
+			"installDockerComposeSwitch": false
+		},
+		"ghcr.io/devcontainers-contrib/features/scala-sdkman:2": {
+			"jdkDistro": "tem"
+		},
+		"ghcr.io/devcontainers-contrib/features/sbt-sdkman:2": {},
+		"ghcr.io/shyim/devcontainers-features/bun:0": {},
+		"ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
+			"packages": [
+				"bash-completion"
+			]
+		},
+		"./post-install-feature": {}
+	},
+
+	// Use this environment variable if you need to bind mount your local source code into a new container.
+	"remoteEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				// miscellaneous
+				"Gruntfuggly.todo-tree",
+				"aaron-bond.better-comments",
+				"streetsidesoftware.code-spell-checker",
+				"mutantdino.resourcemonitor",
+				"EditorConfig.EditorConfig",
+				"PeterSchmalfeldt.explorer-exclude",
+				"ms-azuretools.vscode-docker",
+
+				// cursor utils
+				"wmaurer.change-case",
+				"Cardinal90.multi-cursor-case-preserve",
+				"Lebster.eval-and-replace",
+				"idanp.smartmulticursor",
+
+				// git
+				"mhutchie.git-graph",
+				"donjayamanne.githistory",
+				"GitHub.vscode-pull-request-github",
+				"github.vscode-github-actions",
+
+				// front-end
+				"oven.bun-vscode",
+				"pflannery.vscode-versionlens",
+				"biomejs.biome",
+
+				// java
+				"redhat.java",
+				"vscjava.vscode-lombok",
+				"vscjava.vscode-gradle",
+				// "SonarSource.sonarlint-vscode", // needs node and produces errors without it // we do not actively develop in Java, so we do not need this
+				"mongodb.mongodb-vscode", // mongo is only used in the java backend
+
+				// scala
+				"scala-lang.scala",
+				"scalameta.metals",
+				"scala-lang.scala-snippets",
+				"zxh404.vscode-proto3"
+			]
+		}
+	},
+	"forwardPorts": [
+		5173,
+		9090,
+		27017
+	],
+	"postAttachCommand": ".devcontainer/postAttach.sh"
+}
