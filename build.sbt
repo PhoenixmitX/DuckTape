@@ -4,7 +4,7 @@ import sbt.ProjectOrigin.Organic
 import sbtcrossproject.CrossProject
 
 ThisBuild / scalaVersion := "3.4.2"
-ThisBuild / version := "0.0.2"
+ThisBuild / version := "0.0.3"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / organization := "net.apiduck"
 ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all", "-Yexplicit-nulls") // TODO add in scala 3.5.0 -Yflexible-types
@@ -83,7 +83,6 @@ publish / skip := true
 val GITHUB_TOKEN = sys.env.get("GITHUB_TOKEN") // .getOrElse(throw new Exception("GITHUB_TOKEN is not set"))
 if (GITHUB_TOKEN.isDefined) {
   Seq(
-    ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true),
     ThisBuild / publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/phoenixmitx/ducktape"),
     ThisBuild / credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "phoenixmitx", GITHUB_TOKEN.get),
   )
