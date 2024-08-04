@@ -15,9 +15,9 @@ object DuckTape {
       document.body.appendChild(elem)
       elem
 
-  def render(renderable: DT.DTX, id: String = "root"): UnapplyFunction =
+  def render(id: String = "root", component: DT.DTX): UnapplyFunction =
     val root = getOrCreateElement(id)
-    val WithUnapplyFunction(elements, unapply) = renderable.render()
+    val WithUnapplyFunction(elements, unapply) = component.render()
     SignalLike(elements) match
       case SignalLike.WithSignal(signal) =>
         val unapplySignal = signal.subscribe: nodes =>

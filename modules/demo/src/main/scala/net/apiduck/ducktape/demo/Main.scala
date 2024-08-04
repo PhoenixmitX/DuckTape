@@ -42,7 +42,7 @@ object Main:
       color := ((color.get() + 1) % 360)
     }, 1000 / 60)
 
-    DuckTape.render(id = "app", renderable =
+    DuckTape.render("app",
       div(
         h1(style := si"color: hsl($color, 75%, 50%); font-style: bold")(
           si"Hello, $personToGreet!",

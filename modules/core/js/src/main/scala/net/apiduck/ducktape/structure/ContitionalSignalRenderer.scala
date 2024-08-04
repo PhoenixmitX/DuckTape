@@ -54,6 +54,17 @@ trait ConditionalSignalRenderer:
           reduce = _.flatMap(SignalLike(_).get())
         )
 
+  def SForEach[E](in: WithState[Seq[E]], keyFn: (E, Int) => KeyType = (_:E,i)=>i)(renderFn: ListEntrySignal[E] => DT.DTX): DT.DTX =
+    new DT.DTX:
+      override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
+        in.mapEntriesWithIndex(
+          keyFn,
+          create = (_, valueSignal) => renderFn(valueSignal).render(),
+          postCreate = created => created._1,
+          destroy = (_, created) => created._2(),
+          reduce = _.flatMap(SignalLike(_).get())
+        )
+
   def SForEach[E](in: Signal[IterableOnce[E]], keyFn: E => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
     new DT.DTX:
       override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
