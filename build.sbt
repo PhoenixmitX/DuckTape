@@ -4,7 +4,7 @@ import sbt.ProjectOrigin.Organic
 import sbtcrossproject.CrossProject
 
 ThisBuild / scalaVersion := "3.4.2"
-ThisBuild / version := "0.0.3"
+ThisBuild / version := "0.0.4"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / organization := "net.apiduck"
 ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all", "-Yexplicit-nulls") // TODO add in scala 3.5.0 -Yflexible-types

@@ -29,6 +29,8 @@ object Main:
     val min = randomNumbers.map(all => if all.length == 0 then 0 else all.min)
     val max = randomNumbers.map(all => if all.length == 0 then 0 else all.max)
 
+    val oneTwoThree = totalNumbers.map(totalNumbers => (totalNumbers + 1) to (totalNumbers + 3))
+
     window.setTimeout(() => {
       personToGreet := "Scala.js"
     }, 2000)
@@ -48,6 +50,9 @@ object Main:
           si"Hello, $personToGreet!",
         ),
         "Some static text!",
+        br,
+        SForEach(oneTwoThree): number =>
+          si"$number...",
         br,
         button(onClick := { _ => randomNumbers modify { _ :+ js.Math.random() } })("Click Me!"),
         button(onClick := { _ => randomNumbers := Nil })("Reset"),

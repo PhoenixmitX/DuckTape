@@ -12,7 +12,7 @@ import net.apiduck.ducktape.web.signals.Signal.WithState
 import net.apiduck.ducktape.web.signals.Signal.MaybeSignal
 import net.apiduck.ducktape.web.signals.Signal.SignalLike
 
-// TODO extract the logic to spit Signal[Seq[T]] and Signal[IterableOnce[T]] into multiple signals in separate files
+// TODO extract the logic to spit Signal[Seq[T]] and Signal[Iterable[T]] into multiple signals in separate files
 trait ConditionalSignalRenderer:
 
   type KeyType = String | Int | Double
@@ -68,15 +68,15 @@ trait ConditionalSignalRenderer:
           reduce = _.flatMap(SignalLike(_).get())
         )
 
-  def SForEach[E](in: Signal[IterableOnce[E]], keyFn: E => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
+  def SForEach[E](in: Signal[Iterable[E]], keyFn: E => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
     new DT.DTX:
       override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
         val map = mutable.Map.empty[KeyType, (WithState[E], WithUnapplyFunction[MaybeSignal[Seq[Node]]])]
         var keyIndexes: Seq[KeyType] = Nil
 
-        val nodes = in.map: (iterable: IterableOnce[E]) =>
+        val nodes = in.map: (iterable: Iterable[E]) =>
 
-          val keyValueMap = iterable.iterator.toSeq.map(value => keyFn(value) -> value)
+          val keyValueMap = iterable.toSeq.map(value => keyFn(value) -> value)
           keyIndexes = keyValueMap.map(_._1)
 
           // add & update
@@ -91,7 +91,7 @@ trait ConditionalSignalRenderer:
                 prev
 
           // remove
-          map.keySet.diff(iterable.iterator.toSet.map(keyFn))
+          map.keySet.diff(iterable.toSet.map(keyFn))
             .foreach: key =>
               val (_, WithUnapplyFunction(elements, unapply)) = map.remove(key).get
               unapply()
@@ -107,19 +107,20 @@ trait ConditionalSignalRenderer:
                 unapply()
         )
 
-  inline def SForEach[E](in: Signal[IterableOnce[E]])(renderFn: Signal[E] => DT.DTX): DT.DTX =
+  inline def SForEach[E](in: Signal[Iterable[E]])(renderFn: Signal[E] => DT.DTX): DT.DTX =
     SForEach(in, (_, i) => i)(renderFn)
 
 
-  def SForEach[E](in: Signal[IterableOnce[E]], keyFn: (E, Int) => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
+  def SForEach[E](in: Signal[Iterable[E]], keyFn: (E, Int) => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
     new DT.DTX:
       override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
         val map = mutable.Map.empty[KeyType, (WithState[E], WithUnapplyFunction[MaybeSignal[Seq[Node]]])]
         var keyIndexes: Seq[KeyType] = Nil
 
-        val nodes = in.map: (iterable: IterableOnce[E]) =>
+        val nodes = in.map: (iterable: Iterable[E]) =>
+          val seqWithIndex = iterable.toSeq.zipWithIndex
 
-          val keyValueMap = iterable.iterator.toSeq.zipWithIndex.map((value, index) => keyFn(value, index) -> value)
+          val keyValueMap = seqWithIndex.map((value, index) => keyFn(value, index) -> value)
           keyIndexes = keyValueMap.map(_._1)
 
           // add & update
@@ -134,7 +135,7 @@ trait ConditionalSignalRenderer:
                 prev
 
           // remove
-          map.keySet.diff(iterable.iterator.toSet.zipWithIndex.map((value, index) => keyFn(value, index)))
+          map.keySet.diff(seqWithIndex.map((value, index) => keyFn(value, index)).toSet)
             .foreach: key =>
               val (_, WithUnapplyFunction(elements, unapply)) = map.remove(key).get
               unapply()
