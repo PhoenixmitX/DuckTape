@@ -6,7 +6,7 @@ import net.apiduck.ducktape.util.unapply.*
 import net.apiduck.ducktape.web.signals.Signal
 import net.apiduck.ducktape.web.signals.Signal.SignalLike
 
-object DuckTape {
+object DuckTape:
 
   def getOrCreateElement(id: String = "root"): Element =
     Option(document.getElementById(id)).getOrElse:
@@ -34,4 +34,4 @@ object DuckTape {
           unapply()
           root.innerHTML = ""
         }
-}
+

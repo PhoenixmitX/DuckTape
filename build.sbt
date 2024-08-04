@@ -83,6 +83,7 @@ publish / skip := true
 val GITHUB_TOKEN = sys.env.get("GITHUB_TOKEN") // .getOrElse(throw new Exception("GITHUB_TOKEN is not set"))
 if (GITHUB_TOKEN.isDefined) {
   Seq(
+    ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true),
     ThisBuild / publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/phoenixmitx/ducktape"),
     ThisBuild / credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "phoenixmitx", GITHUB_TOKEN.get),
   )

@@ -54,7 +54,10 @@ trait ConditionalSignalRenderer:
           reduce = _.flatMap(SignalLike(_).get())
         )
 
-  def SForEach[E](in: WithState[Seq[E]], keyFn: (E, Int) => KeyType = (_:E,i)=>i)(renderFn: ListEntrySignal[E] => DT.DTX): DT.DTX =
+  inline def SForEach[E](in: WithState[Seq[E]])(renderFn: ListEntrySignal[E] => DT.DTX): DT.DTX =
+    SForEach(in, (_, i) => i)(renderFn)
+
+  def SForEach[E](in: WithState[Seq[E]], keyFn: (E, Int) => KeyType)(renderFn: ListEntrySignal[E] => DT.DTX): DT.DTX =
     new DT.DTX:
       override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
         in.mapEntriesWithIndex(
@@ -89,6 +92,49 @@ trait ConditionalSignalRenderer:
 
           // remove
           map.keySet.diff(iterable.iterator.toSet.map(keyFn))
+            .foreach: key =>
+              val (_, WithUnapplyFunction(elements, unapply)) = map.remove(key).get
+              unapply()
+
+          // to ordered seq
+          keyIndexes.flatMap(key => SignalLike(map(key)._2.value).get()) // TODO does this work?
+
+        WithUnapplyFunction(
+          nodes,
+          () =>
+            map.foreach:
+              case (_, (_, WithUnapplyFunction(_, unapply))) =>
+                unapply()
+        )
+
+  inline def SForEach[E](in: Signal[IterableOnce[E]])(renderFn: Signal[E] => DT.DTX): DT.DTX =
+    SForEach(in, (_, i) => i)(renderFn)
+
+
+  def SForEach[E](in: Signal[IterableOnce[E]], keyFn: (E, Int) => KeyType)(renderFn: Signal[E] => DT.DTX): DT.DTX =
+    new DT.DTX:
+      override def render(): WithUnapplyFunction[MaybeSignal[Seq[Node]]] =
+        val map = mutable.Map.empty[KeyType, (WithState[E], WithUnapplyFunction[MaybeSignal[Seq[Node]]])]
+        var keyIndexes: Seq[KeyType] = Nil
+
+        val nodes = in.map: (iterable: IterableOnce[E]) =>
+
+          val keyValueMap = iterable.iterator.toSeq.zipWithIndex.map((value, index) => keyFn(value, index) -> value)
+          keyIndexes = keyValueMap.map(_._1)
+
+          // add & update
+          keyValueMap.foreach: (key, value) =>
+            map.updateWith(key):
+              case None =>
+                val newSignal = State(value)
+                val renderable = renderFn(newSignal.map(v => v))
+                Some(newSignal -> renderable.render())
+              case prev@Some((signal, _)) =>
+                signal := value
+                prev
+
+          // remove
+          map.keySet.diff(iterable.iterator.toSet.zipWithIndex.map((value, index) => keyFn(value, index)))
             .foreach: key =>
               val (_, WithUnapplyFunction(elements, unapply)) = map.remove(key).get
               unapply()
