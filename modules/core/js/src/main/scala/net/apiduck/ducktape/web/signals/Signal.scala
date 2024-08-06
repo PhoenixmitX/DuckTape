@@ -53,6 +53,11 @@ object Signal:
     def apply[T](func: () => T): Signal[T] =
       new Computed(Native.Computed(func, options))
 
+  case class Static[T](value: T) extends Signal[T]:
+    def get(): T = value
+    override def map[R](func: T => R): Signal[R] = Static(func(value))
+    override def subscribe(func: T => UnapplyFunction): UnapplyFunction = func(value)
+
   class ComputedWithSource[T](val computed: Signal[T], setter: T => Unit) extends WithState[T]:
     def get(): T = computed.get()
     def set(value: T): Unit = setter(value)
