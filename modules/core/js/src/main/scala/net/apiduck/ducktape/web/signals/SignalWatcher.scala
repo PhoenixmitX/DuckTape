@@ -26,6 +26,15 @@ private[ducktape] object SignalWatcher:
     for s <- w.getPending() do
       s.get()
 
+    if w.getPending().nonEmpty then
+			// this might indicate a bug the application (and most likely in a bug in the Signal.mapEntries & Signal.mapEntriesWithIndex implementations)
+			// a good implementation for the scheduling of the watcher might be to schedule the whatcher in the micro task queue and this rerun in the macro task queue (if it is not scheduled on the micro task queue before)
+      needsProcessing = false
+      // TODO this execution context is using the micro-task queue, not the macro-task queue, that can cause unexpected behavior
+      import scala.concurrent.ExecutionContext.Implicits.global
+      Future:
+        processPending()
+
     w.watch()
 
   private[signals] def effect(callback: () => UnapplyFunction): () => Unit =
