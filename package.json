@@ -4,18 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"sbt ~fastLinkJS\" \"vite --host\"",
+    "dev": "concurrently \"sbt ~demo/fastLinkJS\" \"vite --host\"",
     "build": "vite build",
-    "del": "bun run build",
-    "preview": "vite preview"
+    "preview": "vite preview --host"
   },
   "devDependencies": {
-    "@scala-js/vite-plugin-scalajs": "^1.0.0",
-    "concurrently": "^8.2.2",
-    "typescript": "5.4.5",
-    "vite": "^5.3.5"
+    "@scala-js/vite-plugin-scalajs": "^1.1.0",
+    "concurrently": "^10.0.6",
+    "vite": "^7.3.7"
   },
   "dependencies": {
-    "signal-polyfill": "^0.1.2"
+    "signal-polyfill": "^0.2.2"
   }
 }

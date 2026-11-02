@@ -4,12 +4,6 @@ import scalaJSPlugin from "@scala-js/vite-plugin-scalajs";
 export default defineConfig({
   root: "modules/demo/src/main/vite",
   publicDir: "../public",
-  resolve: {
-    alias: {
-      // fix signal-polyfill import
-      "signal-polyfill/dist/wrapper": "signal-polyfill/dist/index.js",
-    },
-  },
   build: {
     outDir: "../../../dist/",
     emptyOutDir: true,

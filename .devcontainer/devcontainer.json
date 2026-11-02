@@ -5,16 +5,16 @@
 	"image": "mcr.microsoft.com/devcontainers/base:noble",
 
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+		"ghcr.io/devcontainers/features/docker-in-docker:4": {
 			"dockerDashComposeVersion": "none",
 			"installDockerComposeSwitch": false
 		},
-		"ghcr.io/devcontainers-contrib/features/scala-sdkman:2": {
+		"ghcr.io/devcontainers-extra/features/scala-sdkman:2": {
 			"jdkDistro": "tem"
 		},
-		"ghcr.io/devcontainers-contrib/features/sbt-sdkman:2": {},
-		"ghcr.io/shyim/devcontainers-features/bun:0": {},
-		"ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
+		"ghcr.io/devcontainers-extra/features/sbt-sdkman:2": {},
+		"ghcr.io/devcontainers-extra/features/bun": {},
+		"ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
 			"packages": [
 				"bash-completion"
 			]

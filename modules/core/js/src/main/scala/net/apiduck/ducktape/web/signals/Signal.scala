@@ -1,6 +1,6 @@
 package net.apiduck.ducktape.web.signals
 
-import typings.signalPolyfill.distWrapperMod.Signal as Native
+import net.apiduck.ducktape.web.signals.SignalPolyfill.Signal as Native
 
 import scala.language.implicitConversions
 import scala.scalajs.js
@@ -27,9 +27,9 @@ object Signal:
 
   private val scalaOptions = js.Dynamic.literal(
     equals = (a: js.Any, b: js.Any) => a == b
-  ).asInstanceOf[Native.Options[Any]]
+  ).asInstanceOf[SignalPolyfill.Options[Any]]
 
-  private[ducktape] inline def options[T]: Native.Options[T] = scalaOptions.asInstanceOf[Native.Options[T]]
+  private[ducktape] inline def options[T]: SignalPolyfill.Options[T] = scalaOptions.asInstanceOf[SignalPolyfill.Options[T]]
 
   trait WithState[T] extends Signal[T]:
     def set(value: T): Unit
@@ -44,14 +44,14 @@ object Signal:
 
   object State:
     def apply[T](initialValue: T): WithState[T] =
-      new State(Native.State(initialValue, options))
+      new State(new Native.State(initialValue, options))
 
   class Computed[T]private(private val signal: Native.Computed[T]) extends Signal[T]:
     def get(): T = signal.get()
 
   object Computed:
     def apply[T](func: () => T): Signal[T] =
-      new Computed(Native.Computed(func, options))
+      new Computed(new Native.Computed(func, options))
 
   case class Static[T](value: T) extends Signal[T]:
     def get(): T = value

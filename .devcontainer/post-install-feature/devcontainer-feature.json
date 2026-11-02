@@ -5,6 +5,6 @@
 	"description": "Post installation script for AiDuck",
 	"installsAfter": [
 		"ghcr.io/devcontainers/features/docker-outside-of-docker",
-		"ghcr.io/devcontainers-contrib/features/apt-get-packages"
+		"ghcr.io/devcontainers-extra/features/apt-get-packages"
 	]
 }

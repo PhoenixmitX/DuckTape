@@ -1,13 +1,17 @@
 name: Build & Release
 on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Publish a new release'
+        description: 'Publish to GitHub Packages'
         required: true
         default: false
         type: boolean
-  push:
 jobs:
   build-release:
     name: "Build & Release"
@@ -17,26 +21,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: install dependencies using bun
-        run: bun i --frozen-lockfile
+      - name: Install dependencies using bun
+        run: bun install --frozen-lockfile
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: sbt
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Build
         run: sbt +compile
 
-      - name: Publish
+      # publishes on a `v*` tag or when dispatched with publish=true;
+      # build.sbt switches publishTo to GitHub Packages when GITHUB_TOKEN is set
+      - name: Publish to GitHub Packages
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true' }}
         run: sbt +publish
-        if: ${{ github.event.inputs.publish }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

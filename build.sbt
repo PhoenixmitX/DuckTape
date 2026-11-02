@@ -3,15 +3,15 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 import sbt.ProjectOrigin.Organic
 import sbtcrossproject.CrossProject
 
-ThisBuild / scalaVersion := "3.4.2"
-ThisBuild / version := "0.0.5"
+ThisBuild / scalaVersion := "3.9.0"
+ThisBuild / version := "0.0.6"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / organization := "net.apiduck"
-ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all", "-Yexplicit-nulls") // TODO add in scala 3.5.0 -Yflexible-types
+ThisBuild / scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature", "-unchecked", "-Wunused:all", "-Wshadow:all", "-Yexplicit-nulls")
 
-val PekkoVersion = "1.0.2"
-val BorerVersion = "1.14.0"
-val ScalaJsDomVersion = "2.8.0"
+val PekkoVersion = "1.7.1"
+val BorerVersion = "1.19.0"
+val ScalaJsDomVersion = "2.8.1"
 
 lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -20,15 +20,9 @@ lazy val core: CrossProject = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "ducktape-core",
   )
-  .jsConfigure(
-    _.enablePlugins(ScalablyTypedConverterExternalNpmPlugin)
-  )
   .jsSettings(
-    stUseScalaJsDom := true,
+    // the signal-polyfill npm package is used through a hand-written facade (web/signals/SignalPolyfill.scala)
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % ScalaJsDomVersion,
-
-    // Tell ScalablyTyped that we manage `bun install` ourselves
-    externalNpm := baseDirectory.value / "../../../",
   )
 
 lazy val messaging: CrossProject = crossProject(JSPlatform, JVMPlatform)

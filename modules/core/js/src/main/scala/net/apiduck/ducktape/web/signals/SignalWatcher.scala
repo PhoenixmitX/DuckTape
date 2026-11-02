@@ -1,10 +1,9 @@
 package net.apiduck.ducktape.web.signals
 
-import typings.signalPolyfill.distWrapperMod.Signal as Native
-import typings.signalPolyfill.distWrapperMod.Signal.subtle.Watcher
+import net.apiduck.ducktape.web.signals.SignalPolyfill.Signal as Native
+import net.apiduck.ducktape.web.signals.SignalPolyfill.Signal.subtle.Watcher
 
 import scala.concurrent.Future
-import scala.scalajs.js.JSConverters.*
 import net.apiduck.ducktape.util.unapply.*
 
 private[ducktape] object SignalWatcher:
@@ -40,7 +39,7 @@ private[ducktape] object SignalWatcher:
   private[signals] def effect(callback: () => UnapplyFunction): () => Unit =
     var unapply: UnapplyFunction = ()
 
-    val computed: Native.Computed[Any] = Native.Computed(() => {
+    val computed: Native.Computed[Any] = new Native.Computed(() => {
       unapply()
       unapply = callback()
     }, Signal.options)
